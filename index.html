@@ -619,9 +619,14 @@
 
     <!-- Header -->
     <div class="app-header">
-        <div class="logo-badge">
-            <i class="bi bi-box-seam-fill"></i>
-            AMSA — Sistema Digital
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:8px;">
+            <div class="logo-badge">
+                <i class="bi bi-box-seam-fill"></i>
+                AMSA — Sistema Digital
+            </div>
+            <button onclick="cerrarSesion()" style="padding:8px 16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:10px;color:#ef4444;font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <i class="bi bi-box-arrow-right"></i> Salir
+            </button>
         </div>
         <h1>Control de Estiba Planta</h1>
         <p>Complete todas las secciones y aplique su firma digital para enviar a validación</p>
@@ -891,6 +896,19 @@
 <div class="toast-notification" id="toast"></div>
 
 <script>
+    // Auth guard - only operario and admin can access
+    (function() {
+        const session = JSON.parse(sessionStorage.getItem('amsa_session') || 'null');
+        if (!session || (session.role !== 'operario' && session.role !== 'admin')) {
+            window.location.href = 'login.html';
+        }
+    })();
+
+    function cerrarSesion() {
+        sessionStorage.removeItem('amsa_session');
+        window.location.href = 'login.html';
+    }
+
     // Initialize date
     document.addEventListener('DOMContentLoaded', () => {
         const hoy = new Date();

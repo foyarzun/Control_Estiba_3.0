@@ -613,9 +613,14 @@
                 <h1><i class="bi bi-shield-check"></i> Panel de Validación</h1>
                 <p>Sistema de Control y Despacho — AMSA</p>
             </div>
-            <div class="user-badge">
-                <div class="avatar">FP</div>
-                Asistente de Validación
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div class="user-badge">
+                    <div class="avatar" id="avatarUser">FP</div>
+                    <span id="nombreUser">Asistente de Validación</span>
+                </div>
+                <button onclick="cerrarSesion()" style="padding:8px 16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:10px;color:#ef4444;font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                    <i class="bi bi-box-arrow-right"></i> Salir
+                </button>
             </div>
         </div>
 
@@ -752,11 +757,30 @@
 <div class="toast-notification" id="toast"></div>
 
 <script>
+    // Auth guard - only validador and admin can access
+    (function() {
+        const session = JSON.parse(sessionStorage.getItem('amsa_session') || 'null');
+        if (!session || (session.role !== 'validador' && session.role !== 'admin')) {
+            window.location.href = 'login.html';
+        }
+    })();
+
+    function cerrarSesion() {
+        sessionStorage.removeItem('amsa_session');
+        window.location.href = 'login.html';
+    }
+
     let currentDocId = null;
     let currentFilter = 'todos';
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
+        // Show user name
+        const session = JSON.parse(sessionStorage.getItem('amsa_session') || 'null');
+        if (session) {
+            document.getElementById('nombreUser').textContent = session.nombre;
+            document.getElementById('avatarUser').textContent = session.nombre.substring(0, 2).toUpperCase();
+        }
         cargarBandeja();
     });
 
