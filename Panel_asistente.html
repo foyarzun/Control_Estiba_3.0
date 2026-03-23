@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Asistente - AMSA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --glass: rgba(255,255,255,0.04);
+            --glass-border: rgba(255,255,255,0.08);
+            --accent: #3b82f6;
+            --accent-glow: rgba(59,130,246,0.25);
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(ellipse at 80% 50%, rgba(59,130,246,0.06), transparent 50%),
+                        radial-gradient(ellipse at 20% 80%, rgba(139,92,246,0.05), transparent 50%),
+                        radial-gradient(ellipse at 50% 20%, rgba(16,185,129,0.04), transparent 50%);
+            z-index: -1;
+            animation: bgFloat 25s ease-in-out infinite;
+        }
+
+        @keyframes bgFloat {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-2%, 1%); }
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 16px 100px;
+        }
+
+        /* Header */
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            padding: 24px 28px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            position: relative;
+            overflow: hidden;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .panel-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent), var(--accent-green));
+        }
+
+        .panel-header-left h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .panel-header-left p {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(139,92,246,0.1);
+            border: 1px solid rgba(139,92,246,0.25);
+            padding: 10px 18px;
+            border-radius: 50px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--accent-purple);
+        }
+
+        .user-badge .avatar {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 0.75rem;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 18px 20px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .stat-card.total .stat-value { color: var(--accent); }
+        .stat-card.pending .stat-value { color: var(--accent-amber); }
+        .stat-card.approved .stat-value { color: var(--accent-green); }
+        .stat-card.rejected .stat-value { color: var(--accent-red); }
+
+        /* Filter Tabs */
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-secondary);
+        }
+
+        .filter-tab:hover { background: rgba(255,255,255,0.06); }
+
+        .filter-tab.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        /* Document Table */
+        .docs-card {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .docs-card-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .docs-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .docs-table {
+            width: 100%;
+            min-width: 700px;
+            border-collapse: collapse;
+        }
+
+        .docs-table th {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .docs-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            font-size: 0.88rem;
+            vertical-align: middle;
+        }
+
+        .docs-table tbody tr {
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .docs-table tbody tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        .doc-id {
+            font-weight: 700;
+            color: var(--accent);
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge.pendiente {
+            background: rgba(245,158,11,0.15);
+            color: var(--accent-amber);
+            border: 1px solid rgba(245,158,11,0.3);
+        }
+
+        .badge.aprobado {
+            background: rgba(16,185,129,0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(16,185,129,0.3);
+        }
+
+        .badge.rechazado {
+            background: rgba(239,68,68,0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+
+        .btn-review {
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid rgba(59,130,246,0.3);
+            background: rgba(59,130,246,0.1);
+            color: var(--accent);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-review:hover {
+            background: rgba(59,130,246,0.2);
+            transform: translateY(-1px);
+        }
+
+        .empty-state {
+            padding: 60px 24px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        /* Detail View */
+        #vistaDetalle { display: none; }
+
+        .detail-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px 14px 0 0;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .detail-toolbar .file-name {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-toolbar {
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-toolbar:hover { transform: translateY(-1px); }
+
+        .btn-back {
+            background: rgba(255,255,255,0.08);
+            color: var(--text-secondary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-back:hover { background: rgba(255,255,255,0.12); }
+
+        .btn-download {
+            background: rgba(59,130,246,0.15);
+            color: var(--accent);
+            border: 1px solid rgba(59,130,246,0.3);
+        }
+
+        .btn-reject {
+            background: rgba(239,68,68,0.12);
+            color: var(--accent-red);
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+
+        .btn-approve {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-approve:hover { box-shadow: 0 8px 24px rgba(16,185,129,0.3); }
+
+        /* PDF Viewer */
+        .pdf-viewer-bg {
+            background: #3a3d42;
+            padding: 30px;
+            overflow-y: auto;
+            max-height: 78vh;
+            border-radius: 0 0 14px 14px;
+            border: 1px solid var(--glass-border);
+            border-top: none;
+        }
+
+        .hoja-a4 {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            padding: 20mm;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            color: #000;
+            border-radius: 2px;
+        }
+
+        .doc-header-pdf { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        .doc-title-pdf { font-size: 16px; font-weight: bold; margin: 0 0 4px; }
+
+        .table-pdf { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .table-pdf th, .table-pdf td { border: 1px solid #000; padding: 6px 8px; text-align: center; font-size: 11px; }
+        .table-pdf th { background-color: #e8e8e8; font-weight: bold; }
+
+        .sello-digital {
+            border: 2px dashed #0056b3;
+            padding: 12px;
+            color: #0056b3;
+            font-size: 10px;
+            margin-top: 20px;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .sello-aprobado {
+            border-color: #198754;
+            color: #198754;
+        }
+
+        .sello-rechazado {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+        /* Navigation */
+        .nav-link-form {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+            padding: 14px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--accent-green);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .nav-link-form:hover {
+            background: rgba(16,185,129,0.1);
+            border-color: rgba(16,185,129,0.3);
+            color: var(--accent-green);
+        }
+
+        /* Toast */
+        .toast-notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 24px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            z-index: 9999;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast-notification.show { transform: translateY(0); opacity: 1; }
+        .toast-notification.success { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        .toast-notification.error { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+        .toast-notification.info { background: linear-gradient(135deg, #3b82f6, #6366f1); color: white; }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 32px;
+            width: 90%;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+        }
+
+        .modal-box h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        .modal-box p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-box input, .modal-box textarea {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .modal-box input:focus, .modal-box textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.25);
+        }
+
+        .modal-box input.pin-input {
+            text-align: center;
+            font-size: 1.4rem;
+            letter-spacing: 8px;
+        }
+
+        .modal-box textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .btn-modal-cancel {
+            background: rgba(255,255,255,0.08);
+            color: var(--text-secondary);
+        }
+
+        .btn-modal-confirm-green {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-modal-confirm-red {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .panel-header { flex-direction: column; text-align: center; }
+            .detail-toolbar { flex-direction: column; align-items: stretch; text-align: center; }
+            .toolbar-actions { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- ===== BANDEJA VIEW ===== -->
+    <div id="vistaBandeja">
+
+        <!-- Header -->
+        <div class="panel-header">
+            <div class="panel-header-left">
+                <h1><i class="bi bi-shield-check"></i> Panel de Validación</h1>
+                <p>Sistema de Control y Despacho — AMSA</p>
+            </div>
+            <div class="user-badge">
+                <div class="avatar">FP</div>
+                Asistente de Validación
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-value" id="statTotal">0</div>
+                <div class="stat-label">Total Documentos</div>
+            </div>
+            <div class="stat-card pending">
+                <div class="stat-value" id="statPendientes">0</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+            <div class="stat-card approved">
+                <div class="stat-value" id="statAprobados">0</div>
+                <div class="stat-label">Aprobados</div>
+            </div>
+            <div class="stat-card rejected">
+                <div class="stat-value" id="statRechazados">0</div>
+                <div class="stat-label">Rechazados</div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filtrar('todos', this)">Todos</button>
+            <button class="filter-tab" onclick="filtrar('pendiente', this)">
+                <i class="bi bi-clock-fill"></i> Pendientes
+            </button>
+            <button class="filter-tab" onclick="filtrar('aprobado', this)">
+                <i class="bi bi-check-circle-fill"></i> Aprobados
+            </button>
+            <button class="filter-tab" onclick="filtrar('rechazado', this)">
+                <i class="bi bi-x-circle-fill"></i> Rechazados
+            </button>
+        </div>
+
+        <!-- Documents Table -->
+        <div class="docs-card">
+            <div class="docs-card-header">
+                <i class="bi bi-inbox-fill" style="color:var(--accent);"></i>
+                Bandeja de Documentos
+            </div>
+            <div class="docs-table-wrapper">
+                <table class="docs-table">
+                    <thead>
+                        <tr>
+                            <th>ID Documento</th>
+                            <th>Fecha / Hora</th>
+                            <th>Despachador</th>
+                            <th>Cliente Principal</th>
+                            <th>Total Cajas</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyDocs">
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyState" class="empty-state" style="display:none;">
+                <i class="bi bi-inbox"></i>
+                <p>No hay documentos en la bandeja</p>
+                <p style="font-size:0.8rem;margin-top:8px;">Los documentos aparecerán aquí cuando un operario los firme desde el formulario</p>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <a href="index.html" class="nav-link-form">
+            <i class="bi bi-plus-circle-fill"></i>
+            Crear Nuevo Registro de Estiba
+        </a>
+    </div>
+
+    <!-- ===== DETAIL VIEW ===== -->
+    <div id="vistaDetalle">
+        <div class="detail-toolbar">
+            <button class="btn-toolbar btn-back" onclick="volverBandeja()">
+                <i class="bi bi-arrow-left"></i> Volver
+            </button>
+            <span class="file-name">
+                <i class="bi bi-file-earmark-pdf-fill" style="color:#ef4444;"></i>
+                <span id="nombreArchivo">Control_Estiba_XXXX.pdf</span>
+            </span>
+            <div class="toolbar-actions">
+                <button class="btn-toolbar btn-download" onclick="descargarPDF()">
+                    <i class="bi bi-download"></i> Descargar PDF
+                </button>
+                <button class="btn-toolbar btn-reject" id="btnRechazar" onclick="rechazarDocumento()">
+                    <i class="bi bi-x-circle-fill"></i> Rechazar
+                </button>
+                <button class="btn-toolbar btn-approve" id="btnAprobar" onclick="aprobarDocumento()">
+                    <i class="bi bi-check-circle-fill"></i> Aprobar y Firmar
+                </button>
+            </div>
+        </div>
+
+        <div class="pdf-viewer-bg">
+            <div class="hoja-a4" id="documentoPDF">
+                <!-- Rendered dynamically -->
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Approve Modal -->
+<div class="modal-overlay" id="modalAprobar">
+    <div class="modal-box">
+        <h3>✅ Aprobar y Firmar</h3>
+        <p>Ingrese su PIN de Asistente para estampar su firma digital</p>
+        <input type="password" class="pin-input" id="pinAprobar" placeholder="••••" maxlength="8">
+        <div class="modal-buttons">
+            <button class="btn-modal-cancel" onclick="cerrarModales()">Cancelar</button>
+            <button class="btn-modal-confirm-green" onclick="confirmarAprobacion()">Aprobar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal-overlay" id="modalRechazar">
+    <div class="modal-box">
+        <h3>❌ Rechazar Documento</h3>
+        <p>Ingrese el motivo del rechazo para notificar a la planta</p>
+        <textarea id="motivoRechazo" placeholder="Describa el motivo del rechazo..."></textarea>
+        <div class="modal-buttons">
+            <button class="btn-modal-cancel" onclick="cerrarModales()">Cancelar</button>
+            <button class="btn-modal-confirm-red" onclick="confirmarRechazo()">Rechazar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-notification" id="toast"></div>
+
+<script>
+    let currentDocId = null;
+    let currentFilter = 'todos';
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarBandeja();
+    });
+
+    // Load documents from localStorage
+    function obtenerDocs() {
+        return JSON.parse(localStorage.getItem('amsa_docs') || '[]');
+    }
+
+    function guardarDocs(docs) {
+        localStorage.setItem('amsa_docs', JSON.stringify(docs));
+    }
+
+    // Load inbox
+    function cargarBandeja() {
+        const docs = obtenerDocs();
+        const tbody = document.getElementById('tbodyDocs');
+        const empty = document.getElementById('emptyState');
+
+        // Stats
+        const total = docs.length;
+        const pendientes = docs.filter(d => d.estado === 'pendiente').length;
+        const aprobados = docs.filter(d => d.estado === 'aprobado').length;
+        const rechazados = docs.filter(d => d.estado === 'rechazado').length;
+
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statPendientes').textContent = pendientes;
+        document.getElementById('statAprobados').textContent = aprobados;
+        document.getElementById('statRechazados').textContent = rechazados;
+
+        // Filter
+        let filtered = docs;
+        if (currentFilter !== 'todos') {
+            filtered = docs.filter(d => d.estado === currentFilter);
+        }
+
+        // Sort by timestamp desc
+        filtered.sort((a, b) => (b.timestampCreacion || 0) - (a.timestampCreacion || 0));
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+
+        empty.style.display = 'none';
+
+        tbody.innerHTML = filtered.map(doc => {
+            const clientePrincipal = doc.carga?.filas?.[0]?.cliente || '—';
+            const totalCajas = doc.carga?.totalCajas || 0;
+
+            return `
+                <tr onclick="abrirDocumento(${doc.id})">
+                    <td><span class="doc-id">#DOC-${doc.id}</span></td>
+                    <td>${doc.fechaCreacion || '—'}</td>
+                    <td>${doc.firmaOrigen?.firmadoPor || doc.responsables?.despachador || '—'}</td>
+                    <td>${clientePrincipal}</td>
+                    <td><strong>${totalCajas}</strong></td>
+                    <td><span class="badge ${doc.estado}">${capitalizar(doc.estado)}</span></td>
+                    <td>
+                        <button class="btn-review" onclick="event.stopPropagation(); abrirDocumento(${doc.id})">
+                            <i class="bi bi-eye-fill"></i> Revisar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function capitalizar(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    // Filter tabs
+    function filtrar(estado, btn) {
+        currentFilter = estado;
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        cargarBandeja();
+    }
+
+    // Open document
+    function abrirDocumento(id) {
+        currentDocId = id;
+        const docs = obtenerDocs();
+        const doc = docs.find(d => d.id === id);
+        if (!doc) { showToast('Documento no encontrado', 'error'); return; }
+
+        document.getElementById('vistaBandeja').style.display = 'none';
+        document.getElementById('vistaDetalle').style.display = 'block';
+        document.getElementById('nombreArchivo').textContent = `Control_Estiba_AMSA_${id}.pdf`;
+
+        // Show/hide action buttons based on status
+        const btnAprobar = document.getElementById('btnAprobar');
+        const btnRechazar = document.getElementById('btnRechazar');
+        if (doc.estado !== 'pendiente') {
+            btnAprobar.style.display = 'none';
+            btnRechazar.style.display = 'none';
+        } else {
+            btnAprobar.style.display = '';
+            btnRechazar.style.display = '';
+        }
+
+        renderizarPDF(doc);
+    }
+
+    // Render PDF content
+    function renderizarPDF(doc) {
+        const c = doc.cabecera || {};
+        const t = doc.transporte || {};
+        const ti = doc.tiempos || {};
+        const ca = doc.carga || {};
+        const v = doc.validaciones || {};
+        const r = doc.responsables || {};
+
+        let filasHTML = '';
+        (ca.filas || []).forEach(f => {
+            filasHTML += `
+                <tr>
+                    <td>${f.pata || '—'}</td>
+                    <td>${f.po || '—'}</td>
+                    <td>${f.cajas || '0'}</td>
+                    <td>${f.destino || '—'}</td>
+                    <td>${f.cliente || '—'}</td>
+                    <td>${f.agencia || '—'}</td>
+                    <td>${f.pv || '—'}</td>
+                </tr>
+            `;
+        });
+
+        const checks = [];
+        if (v.checkFoto) checks.push('✔ Set Fotográfico Adjunto');
+        if (v.checkEstiba) checks.push('✔ Estiba Correcta');
+        if (v.checkInstructivo) checks.push('✔ Instructivo Entregado');
+        const checkStr = checks.length > 0 ? checks.join(' | ') : 'Sin confirmaciones';
+
+        const gpsStr = t.gps ? `Lat: ${t.gps.lat}, Lng: ${t.gps.lng}` : 'No capturado';
+
+        // Format date
+        let fechaDisplay = c.fecha || '—';
+        if (c.fecha) {
+            const parts = c.fecha.split('-');
+            if (parts.length === 3) fechaDisplay = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+
+        let selloAsistente = '';
+        if (doc.estado === 'aprobado' && doc.firmaAsistente) {
+            selloAsistente = `
+                <div class="sello-digital sello-aprobado">
+                    <strong>SELLO DIGITAL 2 — VALIDACIÓN ASISTENTE</strong><br>
+                    Firmado por: ${doc.firmaAsistente.firmadoPor} — Fecha: ${doc.firmaAsistente.fecha}<br>
+                    Hash de seguridad: ${doc.firmaAsistente.hash}
+                </div>
+            `;
+        }
+
+        if (doc.estado === 'rechazado') {
+            selloAsistente = `
+                <div class="sello-digital sello-rechazado">
+                    <strong>DOCUMENTO RECHAZADO</strong><br>
+                    Rechazado por: Asistente de Validación — Fecha: ${doc.fechaRechazo || '—'}<br>
+                    Motivo: ${doc.motivoRechazo || 'Sin especificar'}
+                </div>
+            `;
+        }
+
+        document.getElementById('documentoPDF').innerHTML = `
+            <div class="doc-header-pdf">
+                <h1 class="doc-title-pdf">CONTROL ESTIBA PLANTA — AMSA</h1>
+                <p style="margin:0;color:#666;font-size:11px;">Documento Generado Automáticamente — ID: #DOC-${doc.id}</p>
+            </div>
+
+            <h6 style="font-weight:bold;text-decoration:underline;margin-bottom:8px;font-size:12px;">CABECERA DE OPERACIÓN</h6>
+            <table class="table-pdf" style="text-align:left;">
+                <tr>
+                    <th style="width:25%;">Fecha Operación:</th>
+                    <td style="width:25%;">${fechaDisplay}</td>
+                    <th style="width:25%;">N° Pedido:</th>
+                    <td style="width:25%;">${c.pedido || '—'}</td>
+                </tr>
+                <tr>
+                    <th>Bodega / Andén:</th>
+                    <td>${c.bodega || '—'}</td>
+                    <th>N° Contenedor:</th>
+                    <td>${c.contenedor || '—'}</td>
+                </tr>
+            </table>
+
+            <h6 style="font-weight:bold;text-decoration:underline;margin:15px 0 8px;font-size:12px;">TRANSPORTE Y CONDUCTOR</h6>
+            <table class="table-pdf" style="text-align:left;">
+                <tr>
+                    <th style="width:25%;">Transportista:</th>
+                    <td style="width:25%;">${t.transportista || '—'}</td>
+                    <th style="width:25%;">Conductor / RUT:</th>
+                    <td style="width:25%;">${t.conductor || '—'} ${t.rut ? '(' + t.rut + ')' : ''}</td>
+                </tr>
+                <tr>
+                    <th>Patente / Rampla:</th>
+                    <td>${t.patente || '—'} / ${t.rampla || '—'}</td>
+                    <th>Celular:</th>
+                    <td>${t.celular || '—'}</td>
+                </tr>
+                <tr>
+                    <th>Ubicación GPS:</th>
+                    <td colspan="3">${gpsStr}</td>
+                </tr>
+            </table>
+
+            <h6 style="font-weight:bold;text-decoration:underline;margin:15px 0 8px;font-size:12px;">REGISTRO DE TIEMPOS</h6>
+            <table class="table-pdf" style="text-align:left;">
+                <tr>
+                    <th>Presentación:</th>
+                    <td>${ti.presentacion || '—'}</td>
+                    <th>Ingreso Andén:</th>
+                    <td>${ti.ingresoAnden || '—'}</td>
+                    <th>Inicio Carga:</th>
+                    <td>${ti.inicioCarga || '—'}</td>
+                </tr>
+                <tr>
+                    <th>Término Carga:</th>
+                    <td>${ti.terminoCarga || '—'}</td>
+                    <th>Salida Andén:</th>
+                    <td>${ti.salidaAnden || '—'}</td>
+                    <th colspan="2"></th>
+                </tr>
+            </table>
+
+            <h6 style="font-weight:bold;text-decoration:underline;margin:15px 0 8px;font-size:12px;">DETALLE DE CARGA (ESTIBA)</h6>
+            <table class="table-pdf">
+                <thead>
+                    <tr>
+                        <th>PATA</th>
+                        <th>N° PO</th>
+                        <th>CAJAS</th>
+                        <th>DESTINO</th>
+                        <th>CLIENTE</th>
+                        <th>AGENCIA</th>
+                        <th>P/V</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${filasHTML}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="2" style="text-align:right;">TOTAL CAJAS:</th>
+                        <th>${ca.totalCajas || 0}</th>
+                        <th colspan="4"></th>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <h6 style="font-weight:bold;text-decoration:underline;margin:15px 0 8px;font-size:12px;">VALIDACIONES DE SEGURIDAD</h6>
+            <table class="table-pdf" style="text-align:left;">
+                <tr>
+                    <th style="width:25%;">Sello Transitorio:</th>
+                    <td style="width:25%;">${v.sello || '—'}</td>
+                    <th style="width:25%;">N° Termógrafo:</th>
+                    <td style="width:25%;">${v.termografo || '—'}</td>
+                </tr>
+                <tr>
+                    <th>Checklist Confirmado:</th>
+                    <td colspan="3">${checkStr}</td>
+                </tr>
+            </table>
+
+            <h6 style="font-weight:bold;text-decoration:underline;margin:15px 0 8px;font-size:12px;">RESPONSABLES</h6>
+            <table class="table-pdf" style="text-align:left;">
+                <tr>
+                    <th style="width:25%;">Despachador:</th>
+                    <td style="width:25%;">${r.despachador || '—'}</td>
+                    <th style="width:25%;">Encargado AMSA:</th>
+                    <td style="width:25%;">${r.encargado || '—'}</td>
+                </tr>
+            </table>
+
+            ${doc.observaciones ? `
+                <h6 style="font-weight:bold;text-decoration:underline;margin:15px 0 8px;font-size:12px;">OBSERVACIONES</h6>
+                <p style="padding:8px;background:#f8f8f8;border:1px solid #ddd;border-radius:4px;font-size:11px;">${doc.observaciones}</p>
+            ` : ''}
+
+            <div class="sello-digital">
+                <strong>SELLO DIGITAL 1 — ORIGEN EN TERRENO</strong><br>
+                Firmado por: ${doc.firmaOrigen?.firmadoPor || '—'} (Despachador Responsable) — Fecha: ${doc.firmaOrigen?.fecha || '—'}<br>
+                Hash de seguridad: ${doc.firmaOrigen?.hash || '—'}
+            </div>
+
+            ${selloAsistente}
+        `;
+    }
+
+    // Back to inbox
+    function volverBandeja() {
+        document.getElementById('vistaDetalle').style.display = 'none';
+        document.getElementById('vistaBandeja').style.display = 'block';
+        currentDocId = null;
+        cargarBandeja();
+    }
+
+    // Modal helpers
+    function cerrarModales() {
+        document.getElementById('modalAprobar').classList.remove('active');
+        document.getElementById('modalRechazar').classList.remove('active');
+    }
+
+    // Approve document - show modal
+    function aprobarDocumento() {
+        document.getElementById('pinAprobar').value = '';
+        document.getElementById('modalAprobar').classList.add('active');
+        setTimeout(() => document.getElementById('pinAprobar').focus(), 100);
+    }
+
+    // Enter key support for PIN
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('pinAprobar').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') confirmarAprobacion();
+        });
+        document.getElementById('motivoRechazo').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) confirmarRechazo();
+        });
+    });
+
+    // Confirm approval
+    function confirmarAprobacion() {
+        const pin = document.getElementById('pinAprobar').value.trim();
+        if (!pin) { showToast('Debe ingresar un PIN', 'error'); return; }
+
+        cerrarModales();
+
+        const docs = obtenerDocs();
+        const docIndex = docs.findIndex(d => d.id === currentDocId);
+        if (docIndex === -1) return;
+
+        const ahora = new Date().toLocaleString('es-CL');
+        const hash = generarHash();
+
+        docs[docIndex].estado = 'aprobado';
+        docs[docIndex].firmaAsistente = {
+            firmadoPor: 'Asistente de Validación',
+            fecha: ahora,
+            hash: hash
+        };
+
+        guardarDocs(docs);
+
+        // Re-render PDF with approval stamp
+        renderizarPDF(docs[docIndex]);
+
+        // Hide buttons
+        document.getElementById('btnAprobar').style.display = 'none';
+        document.getElementById('btnRechazar').style.display = 'none';
+
+        showToast(`Documento #DOC-${currentDocId} aprobado y firmado exitosamente`, 'success');
+    }
+
+    // Reject document - show modal
+    function rechazarDocumento() {
+        document.getElementById('motivoRechazo').value = '';
+        document.getElementById('modalRechazar').classList.add('active');
+        setTimeout(() => document.getElementById('motivoRechazo').focus(), 100);
+    }
+
+    // Confirm rejection
+    function confirmarRechazo() {
+        const motivo = document.getElementById('motivoRechazo').value.trim();
+        if (!motivo) { showToast('Debe ingresar un motivo de rechazo', 'error'); return; }
+
+        cerrarModales();
+
+        const docs = obtenerDocs();
+        const docIndex = docs.findIndex(d => d.id === currentDocId);
+        if (docIndex === -1) return;
+
+        const ahora = new Date().toLocaleString('es-CL');
+
+        docs[docIndex].estado = 'rechazado';
+        docs[docIndex].motivoRechazo = motivo;
+        docs[docIndex].fechaRechazo = ahora;
+
+        guardarDocs(docs);
+
+        renderizarPDF(docs[docIndex]);
+
+        document.getElementById('btnAprobar').style.display = 'none';
+        document.getElementById('btnRechazar').style.display = 'none';
+
+        showToast(`Documento #DOC-${currentDocId} rechazado. Se notificará a la planta.`, 'error');
+    }
+
+    // Download PDF
+    function descargarPDF() {
+        const elemento = document.getElementById('documentoPDF');
+        if (!elemento || !elemento.innerHTML.trim()) {
+            showToast('No hay documento para descargar', 'error');
+            return;
+        }
+        showToast('Generando PDF, por favor espere...', 'info');
+        try {
+            const opciones = {
+                margin: 0,
+                filename: `Control_Estiba_AMSA_${currentDocId || 'DOC'}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opciones).from(elemento).save().then(() => {
+                showToast('PDF descargado correctamente', 'success');
+            }).catch((err) => {
+                showToast('Error al generar PDF: ' + err.message, 'error');
+            });
+        } catch(err) {
+            showToast('Error al generar PDF: ' + err.message, 'error');
+        }
+    }
+
+    // Hash generator
+    function generarHash() {
+        const chars = '0123456789abcdef';
+        let hash = '';
+        for (let i = 0; i < 48; i++) {
+            hash += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return hash;
+    }
+
+    // Toast
+    function showToast(msg, type) {
+        const toast = document.getElementById('toast');
+        toast.className = `toast-notification ${type}`;
+        const icons = { success: 'check-circle-fill', error: 'exclamation-triangle-fill', info: 'info-circle-fill' };
+        toast.innerHTML = `<i class="bi bi-${icons[type] || 'info-circle-fill'}"></i> ${msg}`;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+</script>
+
+</body>
+</html>

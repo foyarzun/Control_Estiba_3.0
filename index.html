@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Estiba - AMSA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --glass: rgba(255,255,255,0.04);
+            --glass-border: rgba(255,255,255,0.08);
+            --accent: #3b82f6;
+            --accent-glow: rgba(59,130,246,0.25);
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(59,130,246,0.08), transparent 50%),
+                        radial-gradient(ellipse at 80% 20%, rgba(16,185,129,0.06), transparent 50%),
+                        radial-gradient(ellipse at 50% 80%, rgba(139,92,246,0.05), transparent 50%);
+            z-index: -1;
+            animation: bgFloat 20s ease-in-out infinite;
+        }
+
+        @keyframes bgFloat {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, -1%) rotate(1deg); }
+            66% { transform: translate(-1%, 2%) rotate(-1deg); }
+        }
+
+        .app-container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 24px 16px 100px;
+        }
+
+        /* Header */
+        .app-header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding: 32px 24px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-green), var(--accent));
+        }
+
+        .logo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--accent), #6366f1);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .app-header h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .app-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Section Cards */
+        .section-card {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .section-card:hover {
+            border-color: rgba(59,130,246,0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 24px;
+            cursor: pointer;
+            user-select: none;
+            transition: var(--transition);
+        }
+
+        .section-header:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .section-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .section-number.s1 { background: linear-gradient(135deg, #3b82f6, #6366f1); }
+        .section-number.s2 { background: linear-gradient(135deg, #10b981, #14b8a6); }
+        .section-number.s3 { background: linear-gradient(135deg, #f59e0b, #f97316); }
+        .section-number.s4 { background: linear-gradient(135deg, #ef4444, #f43f5e); }
+        .section-number.s5 { background: linear-gradient(135deg, #8b5cf6, #a855f7); }
+
+        .section-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            flex: 1;
+        }
+
+        .section-chevron {
+            transition: transform 0.3s ease;
+            color: var(--text-muted);
+        }
+
+        .section-card.open .section-chevron {
+            transform: rotate(180deg);
+        }
+
+        .section-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .section-card.open .section-body {
+            max-height: 2000px;
+        }
+
+        .section-content {
+            padding: 0 24px 24px;
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-grid.cols-3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group label .required {
+            color: var(--accent-red);
+            margin-left: 2px;
+        }
+
+        input, select, textarea {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            outline: none;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* GPS Button */
+        .btn-gps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(20,184,166,0.1));
+            border: 1px dashed rgba(16,185,129,0.4);
+            border-radius: 12px;
+            color: var(--accent-green);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-gps:hover {
+            background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(20,184,166,0.2));
+            transform: translateY(-1px);
+        }
+
+        .btn-gps.captured {
+            border-style: solid;
+            border-color: var(--accent-green);
+            background: rgba(16,185,129,0.15);
+        }
+
+        /* Cargo Table */
+        .cargo-table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .cargo-table {
+            width: 100%;
+            min-width: 750px;
+            border-collapse: collapse;
+        }
+
+        .cargo-table th {
+            background: rgba(59,130,246,0.1);
+            color: var(--accent);
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .cargo-table td {
+            padding: 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            vertical-align: middle;
+        }
+
+        .cargo-table input {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 0.82rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .cargo-table tfoot th {
+            background: rgba(16,185,129,0.1);
+            color: var(--accent-green);
+        }
+
+        .btn-remove-row {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: var(--accent-red);
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .btn-remove-row:hover {
+            background: rgba(239,68,68,0.3);
+            transform: scale(1.1);
+        }
+
+        .btn-add-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(99,102,241,0.1));
+            border: 1px solid rgba(59,130,246,0.3);
+            border-radius: 10px;
+            color: var(--accent);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-add-row:hover {
+            background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(99,102,241,0.2));
+            transform: translateY(-1px);
+        }
+
+        /* Checklist */
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .checklist-item:hover {
+            background: rgba(255,255,255,0.04);
+        }
+
+        .checklist-item input[type="checkbox"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            min-height: 22px;
+            border: 2px solid var(--glass-border);
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            padding: 0;
+            margin: 0;
+            background: transparent;
+            transition: var(--transition);
+        }
+
+        .checklist-item input[type="checkbox"]:checked {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .checklist-item input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            color: white;
+            font-weight: 700;
+        }
+
+        .checklist-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        /* Observations */
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            width: 100%;
+        }
+
+        /* PIN Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 32px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+        }
+
+        .modal-box h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        .modal-box p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-box input {
+            width: 100%;
+            text-align: center;
+            font-size: 1.4rem;
+            letter-spacing: 8px;
+            padding: 14px;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .btn-modal-cancel {
+            background: rgba(255,255,255,0.08);
+            color: var(--text-secondary);
+        }
+
+        .btn-modal-confirm {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: white;
+        }
+
+        .btn-modal-confirm:hover {
+            box-shadow: 0 8px 24px rgba(59,130,246,0.3);
+        }
+
+        /* Submit Button */
+        .btn-submit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 18px 24px;
+            margin-top: 24px;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-submit::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-submit:hover::before {
+            left: 100%;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(59,130,246,0.3);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        /* Navigation link */
+        .nav-link-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            padding: 14px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .nav-link-panel:hover {
+            background: rgba(59,130,246,0.1);
+            border-color: rgba(59,130,246,0.3);
+            color: var(--accent);
+        }
+
+        /* Toast notification */
+        .toast-notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 24px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            z-index: 9999;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast-notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-notification.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .toast-notification.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-grid.cols-3 { grid-template-columns: 1fr; }
+            .app-header h1 { font-size: 1.4rem; }
+            .section-content { padding: 0 16px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- Header -->
+    <div class="app-header">
+        <div class="logo-badge">
+            <i class="bi bi-box-seam-fill"></i>
+            AMSA — Sistema Digital
+        </div>
+        <h1>Control de Estiba Planta</h1>
+        <p>Complete todas las secciones y aplique su firma digital para enviar a validación</p>
+    </div>
+
+    <!-- Section 1: Operation Header -->
+    <div class="section-card open" data-section="1">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-number s1">1</div>
+            <span class="section-title">Cabecera de la Operación</span>
+            <i class="bi bi-chevron-down section-chevron"></i>
+        </div>
+        <div class="section-body">
+            <div class="section-content">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Fecha <span class="required">*</span></label>
+                        <input type="date" id="inputFecha">
+                    </div>
+                    <div class="form-group">
+                        <label>Bodega / Andén <span class="required">*</span></label>
+                        <input type="text" id="inputBodega" placeholder="Ej: Bodega 1 - Andén B">
+                    </div>
+                    <div class="form-group">
+                        <label>N° Pedido</label>
+                        <input type="text" id="inputPedido" placeholder="Ej: CONT-99882">
+                    </div>
+                    <div class="form-group">
+                        <label>N° Contenedor</label>
+                        <input type="text" id="inputContenedor" placeholder="Ej: 45A">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Transport & Driver -->
+    <div class="section-card" data-section="2">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-number s2">2</div>
+            <span class="section-title">Control de Transporte y Conductor</span>
+            <i class="bi bi-chevron-down section-chevron"></i>
+        </div>
+        <div class="section-body">
+            <div class="section-content">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Transportista / Empresa</label>
+                        <input type="text" id="inputTransportista" placeholder="Ej: Transportes del Sur">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre Conductor <span class="required">*</span></label>
+                        <input type="text" id="inputConductor" placeholder="Ej: Manuel Miranda">
+                    </div>
+                    <div class="form-group">
+                        <label>RUT Conductor</label>
+                        <input type="text" id="inputRut" placeholder="Ej: 11.686.943-8">
+                    </div>
+                </div>
+                <div class="form-grid cols-3" style="margin-top: 16px;">
+                    <div class="form-group">
+                        <label>Patente Camión</label>
+                        <input type="text" id="inputPatente" placeholder="XX YY-99">
+                    </div>
+                    <div class="form-group">
+                        <label>Rampla</label>
+                        <input type="text" id="inputRampla" placeholder="Ej: JA 48-09">
+                    </div>
+                    <div class="form-group">
+                        <label>Celular</label>
+                        <input type="tel" id="inputCelular" placeholder="+56 9...">
+                    </div>
+                </div>
+                <div style="margin-top: 16px;">
+                    <button class="btn-gps" id="btnGPS" onclick="capturarGPS()">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span id="gpsText">Capturar Ubicación GPS del Vehículo</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: Time Tracking -->
+    <div class="section-card" data-section="3">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-number s3">3</div>
+            <span class="section-title">Registro de Tiempos</span>
+            <i class="bi bi-chevron-down section-chevron"></i>
+        </div>
+        <div class="section-body">
+            <div class="section-content">
+                <div class="form-grid cols-3">
+                    <div class="form-group">
+                        <label>Hora Presentación</label>
+                        <input type="time" id="inputHoraPresentacion">
+                    </div>
+                    <div class="form-group">
+                        <label>Ingreso Andén</label>
+                        <input type="time" id="inputIngresoAnden">
+                    </div>
+                    <div class="form-group">
+                        <label>Inicio de Carga</label>
+                        <input type="time" id="inputInicioCarga">
+                    </div>
+                </div>
+                <div class="form-grid" style="margin-top: 16px;">
+                    <div class="form-group">
+                        <label>Término de Carga</label>
+                        <input type="time" id="inputTerminoCarga">
+                    </div>
+                    <div class="form-group">
+                        <label>Salida de Andén</label>
+                        <input type="time" id="inputSalidaAnden">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Cargo Detail -->
+    <div class="section-card" data-section="4">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-number s4">4</div>
+            <span class="section-title">Detalle de Estiba (Carga)</span>
+            <i class="bi bi-chevron-down section-chevron"></i>
+        </div>
+        <div class="section-body">
+            <div class="section-content">
+                <div class="cargo-table-wrapper">
+                    <table class="cargo-table" id="tablaCarga">
+                        <thead>
+                            <tr>
+                                <th style="width:60px;">PATA</th>
+                                <th>PO</th>
+                                <th style="width:80px;">CAJAS</th>
+                                <th>DESTINO</th>
+                                <th>CLIENTE</th>
+                                <th>AGENCIA</th>
+                                <th>P/V</th>
+                                <th style="width:44px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyCarga">
+                            <tr>
+                                <td><input type="number" value="1" min="1"></td>
+                                <td><input type="text" placeholder="4200042820"></td>
+                                <td><input type="number" class="input-cajas" value="0" min="0" oninput="calcularTotal()"></td>
+                                <td><input type="text" placeholder="MIAMI"></td>
+                                <td><input type="text" placeholder="INCREDIBLE FISH"></td>
+                                <td><input type="text" placeholder="NEXUS"></td>
+                                <td><input type="text"></td>
+                                <td><button class="btn-remove-row" onclick="eliminarFila(this)"><i class="bi bi-x-lg"></i></button></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="2" style="text-align:right;">TOTAL CAJAS</th>
+                                <th id="totalCajas">0</th>
+                                <th colspan="5"></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <button class="btn-add-row" onclick="agregarFila()">
+                    <i class="bi bi-plus-circle-fill"></i> Agregar Fila
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 5: Validations & Signatures -->
+    <div class="section-card" data-section="5">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-number s5">5</div>
+            <span class="section-title">Validaciones y Responsables</span>
+            <i class="bi bi-chevron-down section-chevron"></i>
+        </div>
+        <div class="section-body">
+            <div class="section-content">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Sello Transitorio</label>
+                        <input type="text" id="inputSello" placeholder="Ej: 00070513">
+                    </div>
+                    <div class="form-group">
+                        <label>N° Termógrafo</label>
+                        <input type="text" id="inputTermografo" placeholder="Ej: TG-5589">
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <label style="font-size:0.78rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;display:block;">
+                        Checklist Control de Carga
+                    </label>
+                    <label class="checklist-item">
+                        <input type="checkbox" id="checkFoto">
+                        <span class="checklist-label">Set Fotográfico Adjunto</span>
+                    </label>
+                    <label class="checklist-item">
+                        <input type="checkbox" id="checkEstiba">
+                        <span class="checklist-label">Estiba Correcta</span>
+                    </label>
+                    <label class="checklist-item">
+                        <input type="checkbox" id="checkInstructivo">
+                        <span class="checklist-label">Instructivo Entregado</span>
+                    </label>
+                </div>
+
+                <div class="form-grid" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label>Despachador Responsable <span class="required">*</span></label>
+                        <input type="text" id="inputDespachador" placeholder="Nombre completo">
+                    </div>
+                    <div class="form-group">
+                        <label>Encargado Despacho AMSA</label>
+                        <input type="text" id="inputEncargado" placeholder="Nombre completo">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Observations -->
+    <div class="section-card open" data-section="obs">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-number" style="background:linear-gradient(135deg,#64748b,#475569);">
+                <i class="bi bi-chat-text-fill" style="font-size:0.85rem;"></i>
+            </div>
+            <span class="section-title">Observaciones Adicionales</span>
+            <i class="bi bi-chevron-down section-chevron"></i>
+        </div>
+        <div class="section-body">
+            <div class="section-content">
+                <textarea id="inputObservaciones" placeholder="Mermas, cajas rotas, cambios o cualquier eventualidad de la carga..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit -->
+    <button class="btn-submit" onclick="guardarYFirmar()">
+        <i class="bi bi-pen-fill"></i>
+        Guardar y Aplicar Firma Digital
+    </button>
+
+    <!-- Navigation -->
+    <a href="Panel_asistente.html" class="nav-link-panel">
+        <i class="bi bi-inbox-fill"></i>
+        Ir al Panel del Asistente
+    </a>
+</div>
+
+<!-- PIN Modal -->
+<div class="modal-overlay" id="pinModal">
+    <div class="modal-box">
+        <h3>🔐 Firma Digital</h3>
+        <p>Ingrese su PIN de seguridad para firmar el documento</p>
+        <input type="password" id="inputPIN" placeholder="••••" maxlength="8">
+        <div class="modal-buttons">
+            <button class="btn-modal-cancel" onclick="cerrarModal()">Cancelar</button>
+            <button class="btn-modal-confirm" onclick="confirmarFirma()">Firmar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-notification" id="toast"></div>
+
+<script>
+    // Initialize date
+    document.addEventListener('DOMContentLoaded', () => {
+        const hoy = new Date();
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        document.getElementById('inputFecha').value = `${yyyy}-${mm}-${dd}`;
+    });
+
+    // Section toggle
+    function toggleSection(header) {
+        const card = header.closest('.section-card');
+        card.classList.toggle('open');
+    }
+
+    // Calculate total boxes
+    function calcularTotal() {
+        let total = 0;
+        document.querySelectorAll('.input-cajas').forEach(input => {
+            const val = parseInt(input.value);
+            if (!isNaN(val)) total += val;
+        });
+        document.getElementById('totalCajas').innerText = total;
+    }
+
+    // Add row
+    function agregarFila() {
+        const tbody = document.getElementById('bodyCarga');
+        const rowCount = tbody.querySelectorAll('tr').length + 1;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="number" value="${rowCount}" min="1"></td>
+            <td><input type="text"></td>
+            <td><input type="number" class="input-cajas" value="0" min="0" oninput="calcularTotal()"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><button class="btn-remove-row" onclick="eliminarFila(this)"><i class="bi bi-x-lg"></i></button></td>
+        `;
+        tbody.appendChild(tr);
+        tr.style.animation = 'fadeIn 0.3s ease';
+    }
+
+    // Remove row
+    function eliminarFila(btn) {
+        const tr = btn.closest('tr');
+        tr.style.opacity = '0';
+        tr.style.transform = 'translateX(-20px)';
+        tr.style.transition = 'all 0.3s ease';
+        setTimeout(() => {
+            tr.remove();
+            calcularTotal();
+        }, 300);
+    }
+
+    // GPS Capture
+    let gpsCoords = null;
+    function capturarGPS() {
+        const btn = document.getElementById('btnGPS');
+        const txt = document.getElementById('gpsText');
+
+        if (!navigator.geolocation) {
+            showToast('Su navegador no soporta geolocalización', 'error');
+            return;
+        }
+
+        txt.textContent = 'Obteniendo ubicación...';
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                gpsCoords = {
+                    lat: pos.coords.latitude.toFixed(6),
+                    lng: pos.coords.longitude.toFixed(6)
+                };
+                txt.textContent = `📍 ${gpsCoords.lat}, ${gpsCoords.lng}`;
+                btn.classList.add('captured');
+                showToast('Ubicación GPS capturada correctamente', 'success');
+            },
+            (err) => {
+                txt.textContent = 'Capturar Ubicación GPS del Vehículo';
+                showToast('No se pudo obtener la ubicación: ' + err.message, 'error');
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    }
+
+    // Generate simple hash
+    function generarHash() {
+        const chars = '0123456789abcdef';
+        let hash = '';
+        for (let i = 0; i < 48; i++) {
+            hash += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return hash;
+    }
+
+    // Get cargo data from table
+    function obtenerFilasCarga() {
+        const rows = [];
+        document.querySelectorAll('#bodyCarga tr').forEach(tr => {
+            const inputs = tr.querySelectorAll('input');
+            rows.push({
+                pata: inputs[0]?.value || '',
+                po: inputs[1]?.value || '',
+                cajas: inputs[2]?.value || '0',
+                destino: inputs[3]?.value || '',
+                cliente: inputs[4]?.value || '',
+                agencia: inputs[5]?.value || '',
+                pv: inputs[6]?.value || ''
+            });
+        });
+        return rows;
+    }
+
+    // Toast notification
+    function showToast(msg, type) {
+        const toast = document.getElementById('toast');
+        toast.className = `toast-notification ${type}`;
+        toast.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'}"></i> ${msg}`;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+
+    // PIN Modal functions
+    function abrirModal() {
+        document.getElementById('inputPIN').value = '';
+        document.getElementById('pinModal').classList.add('active');
+        setTimeout(() => document.getElementById('inputPIN').focus(), 100);
+    }
+
+    function cerrarModal() {
+        document.getElementById('pinModal').classList.remove('active');
+    }
+
+    // Listen for Enter key in PIN input
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('inputPIN').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') confirmarFirma();
+        });
+    });
+
+    // Validate & show PIN modal
+    function guardarYFirmar() {
+        // Validations
+        const fecha = document.getElementById('inputFecha').value;
+        const bodega = document.getElementById('inputBodega').value.trim();
+        const conductor = document.getElementById('inputConductor').value.trim();
+        const despachador = document.getElementById('inputDespachador').value.trim();
+
+        if (!fecha) { showToast('Debe ingresar la fecha de operación', 'error'); return; }
+        if (!bodega) { showToast('Debe ingresar la Bodega / Andén', 'error'); return; }
+        if (!conductor) { showToast('Debe ingresar el nombre del conductor', 'error'); return; }
+        if (!despachador) { showToast('Debe ingresar el despachador responsable', 'error'); return; }
+
+        const filas = obtenerFilasCarga();
+        if (filas.length === 0) { showToast('Debe agregar al menos una fila de carga', 'error'); return; }
+
+        // Show PIN modal
+        abrirModal();
+    }
+
+    // Confirm signature after PIN entry
+    function confirmarFirma() {
+        const pin = document.getElementById('inputPIN').value.trim();
+        if (!pin) { showToast('Debe ingresar un PIN', 'error'); return; }
+
+        cerrarModal();
+
+        const fecha = document.getElementById('inputFecha').value;
+        const bodega = document.getElementById('inputBodega').value.trim();
+        const conductor = document.getElementById('inputConductor').value.trim();
+        const despachador = document.getElementById('inputDespachador').value.trim();
+
+        // Generate document ID
+        const docs = JSON.parse(localStorage.getItem('amsa_docs') || '[]');
+        const nextId = docs.length > 0 ? Math.max(...docs.map(d => d.id)) + 1 : 1001;
+
+        const ahora = new Date();
+        const fechaHora = ahora.toLocaleString('es-CL');
+        const filas = obtenerFilasCarga();
+
+        // Build document
+        const documento = {
+            id: nextId,
+            estado: 'pendiente',
+            fechaCreacion: fechaHora,
+            timestampCreacion: ahora.getTime(),
+            cabecera: {
+                fecha: fecha,
+                bodega: bodega,
+                pedido: document.getElementById('inputPedido').value.trim(),
+                contenedor: document.getElementById('inputContenedor').value.trim()
+            },
+            transporte: {
+                transportista: document.getElementById('inputTransportista').value.trim(),
+                conductor: conductor,
+                rut: document.getElementById('inputRut').value.trim(),
+                patente: document.getElementById('inputPatente').value.trim(),
+                rampla: document.getElementById('inputRampla').value.trim(),
+                celular: document.getElementById('inputCelular').value.trim(),
+                gps: gpsCoords
+            },
+            tiempos: {
+                presentacion: document.getElementById('inputHoraPresentacion').value,
+                ingresoAnden: document.getElementById('inputIngresoAnden').value,
+                inicioCarga: document.getElementById('inputInicioCarga').value,
+                terminoCarga: document.getElementById('inputTerminoCarga').value,
+                salidaAnden: document.getElementById('inputSalidaAnden').value
+            },
+            carga: {
+                filas: filas,
+                totalCajas: parseInt(document.getElementById('totalCajas').innerText) || 0
+            },
+            validaciones: {
+                sello: document.getElementById('inputSello').value.trim(),
+                termografo: document.getElementById('inputTermografo').value.trim(),
+                checkFoto: document.getElementById('checkFoto').checked,
+                checkEstiba: document.getElementById('checkEstiba').checked,
+                checkInstructivo: document.getElementById('checkInstructivo').checked
+            },
+            responsables: {
+                despachador: despachador,
+                encargado: document.getElementById('inputEncargado').value.trim()
+            },
+            observaciones: document.getElementById('inputObservaciones').value.trim(),
+            firmaOrigen: {
+                firmadoPor: despachador,
+                fecha: fechaHora,
+                hash: generarHash()
+            },
+            firmaAsistente: null,
+            motivoRechazo: null
+        };
+
+        // Save to localStorage
+        docs.push(documento);
+        localStorage.setItem('amsa_docs', JSON.stringify(docs));
+
+        showToast(`✅ Documento #DOC-${nextId} firmado y enviado a validación`, 'success');
+
+        // Redirect after delay
+        setTimeout(() => {
+            window.location.href = 'Panel_asistente.html';
+        }, 1500);
+    }
+</script>
+
+</body>
+</html>
